@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../modules/products/model/sale_model.dart';
-import '../modules/products/service/sale_service.dart';
+import '../../modules/products/model/sale_model.dart';
+import '../../modules/products/service/sale_service.dart';
 import 'sale_form.dart';
 
 class SaleScreen extends StatefulWidget {
+  const SaleScreen({super.key});
+
   @override
   _SaleScreenState createState() => _SaleScreenState();
 }

@@ -19,4 +19,16 @@ class UserService {
       body: jsonEncode(user.toJson()),
     );
   }
+
+  Future<void> updateUser(User user) async {
+    await http.put(
+      Uri.parse('$baseUrl/${user.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(user.toJson()),
+    );
+  }
+
+  Future<void> deleteUser(int id) async {
+    await http.delete(Uri.parse('$baseUrl/$id'));
+  }
 }

@@ -1,37 +1,42 @@
+import 'package:bikeshop_front_end/modules/products/service/purchase_service.dart';
+import 'package:bikeshop_front_end/screens/purchase/purchase_form.dart';
 import 'package:flutter/material.dart';
-import '../modules/products/model/product_model.dart';
-import '../modules/products/service/product_service.dart';
-import 'product_form.dart';
+import '../../modules/products/model/purchase_model.dart';
+import 'package:intl/intl.dart';
 
-class ProductScreen extends StatefulWidget {
+class PurchaseScreen extends StatefulWidget {
+  const PurchaseScreen({super.key});
+
   @override
-  _ProductScreenState createState() => _ProductScreenState();
+  _PurchaseScreenState createState() => _PurchaseScreenState();
 }
 
-class _ProductScreenState extends State<ProductScreen> {
-  final service = ProductService();
-  List<Product> products = [];
+class _PurchaseScreenState extends State<PurchaseScreen> {
+  final service = PurchaseService();
+  List<Purchase> purchases = [];
+
+  final DateFormat format = DateFormat('dd/MM/yyyy HH:mm');
 
   @override
   void initState() {
     super.initState();
-    loadProducts();
+    loadPurchases();
   }
 
-  void loadProducts() async {
-    final data = await service.getProducts();
-    setState(() => products = data);
+  void loadPurchases() async {
+    final data = await service.getPurchase();
+    setState(() => purchases = data);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Produtos')),
+      appBar: AppBar(title: Text('Compras')),
       body: ListView.builder(
         padding: EdgeInsets.all(12),
-        itemCount: products.length,
+        itemCount: purchases.length,
         itemBuilder: (context, index) {
-          final p = products[index];
+          final p = purchases[index];
 
           return Container(
             margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -52,10 +57,10 @@ class _ProductScreenState extends State<ProductScreen> {
                 Container(
                   padding: EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
+                    color: Colors.blue.shade100,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.inventory, color: Colors.orange),
+                  child: Icon(Icons.shopping_cart, color: Colors.blue),
                 ),
 
                 SizedBox(width: 12),
@@ -65,7 +70,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        p.nome,
+                        p.produto.nome,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -74,10 +79,10 @@ class _ProductScreenState extends State<ProductScreen> {
 
                       SizedBox(height: 4),
 
-                      Text('Estoque: ${p.estoque}'),
+                      Text('Qtd: ${p.quantidade}'),
 
                       Text(
-                        'Lucro: ${p.porcentagemLucro}%',
+                        'Data: ${format.format(p.dataEntrada)}',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],
@@ -88,7 +93,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'R\$ ${p.valorVenda.toStringAsFixed(2)}',
+                      'R\$ ${(p.valorCompra * p.quantidade).toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
@@ -106,9 +111,9 @@ class _ProductScreenState extends State<ProductScreen> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => ProductForm()),
+            MaterialPageRoute(builder: (_) => PurchaseForm()),
           );
-          loadProducts();
+          loadPurchases();
         },
         child: Icon(Icons.add),
       ),

@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
-import '../modules/products/model/product_model.dart';
-import '../modules/products/service/product_service.dart';
-import '../modules/products/model/sale_model.dart';
-import '../modules/products/service/sale_service.dart';
+import '../../modules/products/model/product_model.dart';
+import '../../modules/products/model/purchase_model.dart';
+import '../../modules/products/service/product_service.dart';
+import '../../modules/products/service/purchase_service.dart';
 
-class SaleForm extends StatefulWidget {
+class PurchaseForm extends StatefulWidget {
+  const PurchaseForm({super.key});
+
   @override
-  _SaleFormState createState() => _SaleFormState();
+  _PurchaseFormState createState() => _PurchaseFormState();
 }
 
-class _SaleFormState extends State<SaleForm> {
+class _PurchaseFormState extends State<PurchaseForm> {
   final productService = ProductService();
-  final saleService = SaleService();
+  final purchaseService = PurchaseService();
 
   List<Product> products = [];
   Product? selectedProduct;
 
+  final valorController = TextEditingController();
   final quantidadeController = TextEditingController();
 
   @override
@@ -32,47 +35,43 @@ class _SaleFormState extends State<SaleForm> {
   void save() async {
     if (selectedProduct == null) return;
 
+    final valor = double.tryParse(valorController.text) ?? 0;
     final quantidade = int.tryParse(quantidadeController.text) ?? 0;
 
-    if (quantidade <= 0) return;
-
-    final sale = Sale(
-      produto: selectedProduct!,
+    final purchase = Purchase(
+      valorCompra: valor,
       quantidade: quantidade,
-      valorVenda: 0, // backend calcula
-      dataSaida: DateTime.now(),
+      dataEntrada: DateTime.now(),
+      produto: selectedProduct!,
     );
 
-    try {
-      await saleService.createSale(sale);
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erro: ${e.toString()}')));
-    }
+    await purchaseService.createPurchase(purchase);
+
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Nova Venda')),
+      appBar: AppBar(title: Text('Nova Compra')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
           children: [
             DropdownButtonFormField<Product>(
               hint: Text('Selecione o produto'),
-              value: selectedProduct,
+              initialValue: selectedProduct,
               items: products.map((p) {
-                return DropdownMenuItem(
-                  value: p,
-                  child: Text('${p.nome} (Estoque: ${p.estoque})'),
-                );
+                return DropdownMenuItem(value: p, child: Text(p.nome));
               }).toList(),
               onChanged: (value) {
                 setState(() => selectedProduct = value);
               },
+            ),
+            TextField(
+              controller: valorController,
+              decoration: InputDecoration(labelText: 'Valor de compra'),
+              keyboardType: TextInputType.number,
             ),
             TextField(
               controller: quantidadeController,

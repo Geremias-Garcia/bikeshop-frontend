@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'product_screen.dart';
-import 'purchase_screen.dart';
-import 'sale_screen.dart';
-import 'user_screen.dart';
+import '../product/product_screen.dart';
+import '../purchase/purchase_screen.dart';
+import '../sale/sale_screen.dart';
+import '../user/user_screen.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   Widget buildButton({
     required BuildContext context,
     required String title,

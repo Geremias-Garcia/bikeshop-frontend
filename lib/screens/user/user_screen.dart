@@ -1,9 +1,11 @@
-import 'package:bikeshop_front_end/screens/user_form.dart';
+import 'package:bikeshop_front_end/screens/user/user_form.dart';
 import 'package:flutter/material.dart';
-import '../modules/products/model/user_model.dart';
-import '../modules/products/service/user_service.dart';
+import '../../modules/products/model/user_model.dart';
+import '../../modules/products/service/user_service.dart';
 
 class UserScreen extends StatefulWidget {
+  const UserScreen({super.key});
+
   @override
   _UserScreenState createState() => _UserScreenState();
 }
@@ -23,10 +25,40 @@ class _UserScreenState extends State<UserScreen> {
     setState(() => users = data);
   }
 
+  Future<void> confirmDelete(User user) async {
+    final confirm = await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Desativar usuário'),
+        content: Text('Deseja realmente desativar este usuário?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await service.deleteUser(user.id!);
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Usuário desativado')));
+
+      loadUsers();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Usuarios')),
+      appBar: AppBar(title: Text('Usuários')),
       body: ListView.builder(
         padding: EdgeInsets.all(12),
         itemCount: users.length,
@@ -71,17 +103,33 @@ class _UserScreenState extends State<UserScreen> {
                           fontSize: 16,
                         ),
                       ),
-
                       SizedBox(height: 4),
-
                       Text('Telefone: ${u.phone}'),
-
                       Text(
                         'Email: ${u.email}',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],
                   ),
+                ),
+
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => UserForm(user: u)),
+                        );
+                        loadUsers();
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => confirmDelete(u),
+                    ),
+                  ],
                 ),
               ],
             ),

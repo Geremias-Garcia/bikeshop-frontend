@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../modules/products/model/product_model.dart';
-import '../modules/products/service/product_service.dart';
+import '../../modules/products/model/product_model.dart';
+import '../../modules/products/service/product_service.dart';
 
 class ProductForm extends StatefulWidget {
+  const ProductForm({super.key});
+
   @override
   _ProductFormState createState() => _ProductFormState();
 }
