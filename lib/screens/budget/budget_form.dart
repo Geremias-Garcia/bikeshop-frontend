@@ -7,14 +7,14 @@ import '../../modules/products/service/product_service.dart';
 import '../../modules/products/service/order_service.dart';
 import '../../modules/products/service/user_service.dart';
 
-class SaleForm extends StatefulWidget {
-  const SaleForm({super.key});
+class BudgetForm extends StatefulWidget {
+  const BudgetForm({super.key});
 
   @override
-  _SaleFormState createState() => _SaleFormState();
+  State<BudgetForm> createState() => _BudgetFormState();
 }
 
-class _SaleFormState extends State<SaleForm> {
+class _BudgetFormState extends State<BudgetForm> {
   final productService = ProductService();
   final orderService = OrderService();
   final userService = UserService();
@@ -28,8 +28,6 @@ class _SaleFormState extends State<SaleForm> {
   final quantidadeController = TextEditingController();
 
   List<OrderItem> carrinho = [];
-
-  bool isSaving = false;
 
   @override
   void initState() {
@@ -48,28 +46,17 @@ class _SaleFormState extends State<SaleForm> {
   }
 
   void adicionarItem() {
-    if (selectedProduct == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Selecione um produto')));
-      return;
-    }
+    if (selectedProduct == null) return;
 
-    final quantidade = int.tryParse(quantidadeController.text) ?? 0;
-
-    if (quantidade <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Quantidade inválida')));
-      return;
-    }
+    final qtd = int.tryParse(quantidadeController.text) ?? 0;
+    if (qtd <= 0) return;
 
     setState(() {
       carrinho.add(
         OrderItem(
           productId: selectedProduct!.id!,
           productName: selectedProduct!.nome,
-          quantidade: quantidade,
+          quantidade: qtd,
         ),
       );
     });
@@ -77,37 +64,8 @@ class _SaleFormState extends State<SaleForm> {
     quantidadeController.clear();
   }
 
-  Future<void> salvar() async {
-    if (selectedUser == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Selecione um cliente')));
-      return;
-    }
-
-    if (carrinho.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Carrinho vazio')));
-      return;
-    }
-
-    final forma = await showDialog<FormaPagamento>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Forma de pagamento'),
-        children: FormaPagamento.values.map((f) {
-          return SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, f),
-            child: Text(f.label),
-          );
-        }).toList(),
-      ),
-    );
-
-    if (forma == null) return;
-
-    setState(() => isSaving = true);
+  void salvar() async {
+    if (selectedUser == null || carrinho.isEmpty) return;
 
     final order = Order(
       userId: selectedUser!.id!,
@@ -116,51 +74,40 @@ class _SaleFormState extends State<SaleForm> {
     );
 
     try {
-      await orderService.criarVendaDireta(order, forma);
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Venda realizada!')));
-        Navigator.pop(context);
-      }
+      await orderService.criar(order);
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     }
-
-    setState(() => isSaving = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova Venda')),
+      appBar: AppBar(title: const Text('Novo Orçamento')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             DropdownButtonFormField<User>(
               hint: const Text('Cliente'),
-              items: users
-                  .map((u) => DropdownMenuItem(value: u, child: Text(u.name)))
-                  .toList(),
+              items: users.map((u) {
+                return DropdownMenuItem(value: u, child: Text(u.name));
+              }).toList(),
               onChanged: (v) => setState(() => selectedUser = v),
             ),
-            const SizedBox(height: 12),
             DropdownButtonFormField<Product>(
               hint: const Text('Produto'),
-              items: products
-                  .map((p) => DropdownMenuItem(value: p, child: Text(p.nome)))
-                  .toList(),
+              items: products.map((p) {
+                return DropdownMenuItem(value: p, child: Text(p.nome));
+              }).toList(),
               onChanged: (v) => setState(() => selectedProduct = v),
             ),
-            const SizedBox(height: 12),
             TextField(
               controller: quantidadeController,
               decoration: const InputDecoration(labelText: 'Quantidade'),
-              keyboardType: TextInputType.number,
             ),
             ElevatedButton(
               onPressed: adicionarItem,
@@ -172,21 +119,13 @@ class _SaleFormState extends State<SaleForm> {
                   return ListTile(
                     title: Text(item.productName),
                     subtitle: Text('Qtd: ${item.quantidade}'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() => carrinho.remove(item));
-                      },
-                    ),
                   );
                 }).toList(),
               ),
             ),
             ElevatedButton(
-              onPressed: isSaving ? null : salvar,
-              child: isSaving
-                  ? const CircularProgressIndicator()
-                  : const Text('Finalizar Venda'),
+              onPressed: salvar,
+              child: const Text('Salvar Orçamento'),
             ),
           ],
         ),

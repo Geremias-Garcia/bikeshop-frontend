@@ -1,34 +1,41 @@
+import 'package:bikeshop_front_end/core/config/api_config.dart';
+import 'package:bikeshop_front_end/modules/products/service/api_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../model/user_model.dart';
 
 class UserService {
-  final String baseUrl = 'http://192.168.1.5:8080/usuarios';
+  final String baseUrl = '${ApiConfig.baseUrl}/usuarios';
 
   Future<List<User>> getUsers() async {
     final response = await http.get(Uri.parse(baseUrl));
+    final data = ApiService.handleResponse(response);
 
-    final List data = jsonDecode(response.body);
-    return data.map((e) => User.fromJson(e)).toList();
+    return (data as List).map((e) => User.fromJson(e)).toList();
   }
 
   Future<void> createUser(User user) async {
-    await http.post(
+    final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(user.toJson()),
     );
+
+    ApiService.handleResponse(response);
   }
 
   Future<void> updateUser(User user) async {
-    await http.put(
+    final response = await http.put(
       Uri.parse('$baseUrl/${user.id}'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(user.toJson()),
     );
+
+    ApiService.handleResponse(response);
   }
 
   Future<void> deleteUser(int id) async {
-    await http.delete(Uri.parse('$baseUrl/$id'));
+    final response = await http.delete(Uri.parse('$baseUrl/$id'));
+    ApiService.handleResponse(response);
   }
 }

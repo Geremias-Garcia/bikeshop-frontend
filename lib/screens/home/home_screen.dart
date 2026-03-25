@@ -1,3 +1,4 @@
+import 'package:bikeshop_front_end/screens/budget/budget_screen.dart';
 import 'package:flutter/material.dart';
 import '../product/product_screen.dart';
 import '../purchase/purchase_screen.dart';
@@ -109,7 +110,12 @@ class HomeScreen extends StatelessWidget {
               title: 'Orçamento',
               icon: Icons.description,
               color: Colors.purple,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => BudgetScreen()),
+                );
+              },
             ),
             buildButton(
               context: context,

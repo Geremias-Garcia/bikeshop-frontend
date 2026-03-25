@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../modules/products/model/sale_model.dart';
-import '../../modules/products/service/sale_service.dart';
+import '../../modules/products/model/order_model.dart';
+import '../../modules/products/service/order_service.dart';
 import 'sale_form.dart';
 
 class SaleScreen extends StatefulWidget {
@@ -12,96 +12,146 @@ class SaleScreen extends StatefulWidget {
 }
 
 class _SaleScreenState extends State<SaleScreen> {
-  final service = SaleService();
-  List<Sale> sales = [];
+  final service = OrderService();
+
+  List<Order> vendas = [];
+  bool isLoading = true;
 
   final DateFormat format = DateFormat('dd/MM/yyyy HH:mm');
 
   @override
   void initState() {
     super.initState();
-    loadSales();
+    loadVendas();
   }
 
-  void loadSales() async {
-    final data = await service.getSales();
-    setState(() => sales = data);
+  Future<void> loadVendas() async {
+    setState(() => isLoading = true);
+
+    try {
+      final data = await service.getVendas();
+      setState(() => vendas = data);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
+    }
+
+    setState(() => isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
-      appBar: AppBar(title: Text('Vendas')),
+      appBar: AppBar(title: const Text('Vendas')),
       body: ListView.builder(
-        padding: EdgeInsets.all(12),
-        itemCount: sales.length,
+        padding: const EdgeInsets.all(12),
+        itemCount: vendas.length,
         itemBuilder: (context, index) {
-          final s = sales[index];
+          final order = vendas[index];
+
+          final dataExibida = order.dataFechamento != null
+              ? format.format(DateTime.parse(order.dataFechamento!))
+              : '-';
 
           return Container(
-            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            padding: EdgeInsets.all(12),
+            margin: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 6),
               ],
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.attach_money, color: Colors.green),
+            child: ExpansionTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade100,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-
-                SizedBox(width: 12),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        s.produto.nome,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-
-                      SizedBox(height: 4),
-
-                      Text('Qtd: ${s.quantidade}'),
-
-                      Text(
-                        'Data: ${format.format(s.dataSaida)}',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
+                child: const Icon(Icons.attach_money, color: Colors.green),
+              ),
+              title: Text(
+                order.userName ?? 'Sem nome',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
                 ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'R\$ ${s.valorVenda.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                        fontSize: 16,
-                      ),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'R\$ ${order.total?.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
+                  ),
+                  Text(
+                    'Data: $dataExibida',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  if (order.formaPagamento != null)
+                    Text(
+                      'Pagamento: ${order.formaPagamento}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                ],
+              ),
+              children: [
+                const Divider(),
+                ...order.itens.map((item) {
+                  final unit = item.valorUnitario ?? 0;
+                  final total = item.quantidade * unit;
+
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 6,
+                      horizontal: 12,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // 🔥 LINHA LADO A LADO
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Qtd: ${item.quantidade}'),
+                            Text('Unit: R\$ ${unit.toStringAsFixed(2)}'),
+                            Text(
+                              'Total: R\$ ${total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               ],
             ),
           );
@@ -111,11 +161,11 @@ class _SaleScreenState extends State<SaleScreen> {
         onPressed: () async {
           await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => SaleForm()),
+            MaterialPageRoute(builder: (_) => const SaleForm()),
           );
-          loadSales();
+          loadVendas();
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
