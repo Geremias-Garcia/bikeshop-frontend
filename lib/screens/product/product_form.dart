@@ -46,7 +46,14 @@ class _ProductFormState extends State<ProductForm> {
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
-            ElevatedButton(onPressed: save, child: Text('Salvar')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: save,
+              child: Text('Salvar'),
+            ),
           ],
         ),
       ),

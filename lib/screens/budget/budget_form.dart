@@ -118,7 +118,12 @@ class _BudgetFormState extends State<BudgetForm> {
               controller: quantidadeController,
               decoration: const InputDecoration(labelText: 'Quantidade'),
             ),
+            SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+              ),
               onPressed: adicionarItem,
               child: const Text('Adicionar'),
             ),
@@ -133,6 +138,10 @@ class _BudgetFormState extends State<BudgetForm> {
               ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+              ),
               onPressed: salvar,
               child: const Text('Salvar Orçamento'),
             ),

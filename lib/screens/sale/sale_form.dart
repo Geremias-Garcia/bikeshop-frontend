@@ -186,7 +186,12 @@ class _SaleFormState extends State<SaleForm> {
             DropdownButtonFormField<Product>(
               hint: const Text('Produto'),
               items: products
-                  .map((p) => DropdownMenuItem(value: p, child: Text(p.nome)))
+                  .map(
+                    (p) => DropdownMenuItem(
+                      value: p,
+                      child: Text('NOME: ${p.nome} - ESTOQUE ${p.estoque}'),
+                    ),
+                  )
                   .toList(),
               onChanged: (v) => setState(() => selectedProduct = v),
             ),
@@ -196,9 +201,16 @@ class _SaleFormState extends State<SaleForm> {
               decoration: const InputDecoration(labelText: 'Quantidade'),
               keyboardType: TextInputType.number,
             ),
-            ElevatedButton(
-              onPressed: adicionarItem,
-              child: const Text('Adicionar'),
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: adicionarItem,
+                child: const Text('Adicionar'),
+              ),
             ),
             Expanded(
               child: ListView(
@@ -216,7 +228,12 @@ class _SaleFormState extends State<SaleForm> {
                 }).toList(),
               ),
             ),
+            SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
               onPressed: isSaving ? null : salvar,
               child: isSaving
                   ? const CircularProgressIndicator()

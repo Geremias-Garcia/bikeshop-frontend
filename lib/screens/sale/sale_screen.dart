@@ -157,7 +157,7 @@ class _SaleScreenState extends State<SaleScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
             context,
@@ -165,7 +165,10 @@ class _SaleScreenState extends State<SaleScreen> {
           );
           loadVendas();
         },
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: Text("Nova venda"),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
       ),
     );
   }

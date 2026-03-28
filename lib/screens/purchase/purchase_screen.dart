@@ -107,7 +107,7 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
             context,
@@ -115,7 +115,10 @@ class _PurchaseScreenState extends State<PurchaseScreen> {
           );
           loadPurchases();
         },
-        child: Icon(Icons.add),
+        label: Text("Nova compra"),
+        icon: Icon(Icons.add),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
     );
   }

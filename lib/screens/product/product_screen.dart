@@ -104,7 +104,7 @@ class _ProductScreenState extends State<ProductScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           await Navigator.push(
             context,
@@ -112,7 +112,10 @@ class _ProductScreenState extends State<ProductScreen> {
           );
           loadProducts();
         },
-        child: Icon(Icons.add),
+        backgroundColor: Colors.orange,
+        icon: Icon(Icons.add),
+        label: Text("Novo produto"),
+        foregroundColor: Colors.white,
       ),
     );
   }

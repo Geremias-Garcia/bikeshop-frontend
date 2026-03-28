@@ -34,8 +34,10 @@ class _UserScreenState extends State<UserScreen> {
         _filtered = data;
       });
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Erro: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     } finally {
       setState(() => isLoading = false);
     }
@@ -46,10 +48,14 @@ class _UserScreenState extends State<UserScreen> {
     setState(() {
       _filtered = q.isEmpty
           ? _all
-          : _all.where((u) =>
-              u.name.toLowerCase().contains(q) ||
-              u.email.toLowerCase().contains(q) ||
-              u.phone.contains(q)).toList();
+          : _all
+                .where(
+                  (u) =>
+                      u.name.toLowerCase().contains(q) ||
+                      u.email.toLowerCase().contains(q) ||
+                      u.phone.contains(q),
+                )
+                .toList();
     });
   }
 
@@ -75,12 +81,16 @@ class _UserScreenState extends State<UserScreen> {
     if (confirm != true) return;
     try {
       await service.deleteUser(user.id!);
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Cliente desativado')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Cliente desativado')));
       loadUsers();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Erro: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     }
   }
 
@@ -141,23 +151,35 @@ class _UserScreenState extends State<UserScreen> {
                   icon: Icons.person,
                   onTap: () => _openForm(user: u),
                   children: [
-                    Text(u.name,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text(
+                      u.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(u.phone, style: const TextStyle(fontSize: 13)),
-                    Text(u.email,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    Text(
+                      u.email,
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
                   ],
                   trailing: [
                     IconButton(
-                      icon: const Icon(Icons.edit,
-                          color: AppColors.client, size: 20),
+                      icon: const Icon(
+                        Icons.edit,
+                        color: AppColors.client,
+                        size: 20,
+                      ),
                       onPressed: () => _openForm(user: u),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          color: Colors.red, size: 20),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                        size: 20,
+                      ),
                       onPressed: () => _confirmDelete(u),
                     ),
                   ],
@@ -167,6 +189,7 @@ class _UserScreenState extends State<UserScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
         backgroundColor: AppColors.client,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Novo cliente'),
       ),

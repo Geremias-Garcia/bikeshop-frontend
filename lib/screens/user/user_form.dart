@@ -13,19 +13,31 @@ class UserForm extends StatefulWidget {
 
 class _UserFormState extends State<UserForm> {
   final service = UserService();
-  late final _nameController = TextEditingController(text: widget.user?.name ?? '');
-  late final _phoneController = TextEditingController(text: widget.user?.phone ?? '');
-  late final _emailController = TextEditingController(text: widget.user?.email ?? '');
+
+  late final _nameController = TextEditingController(
+    text: widget.user?.name ?? '',
+  );
+  late final _phoneController = TextEditingController(
+    text: widget.user?.phone ?? '',
+  );
+  late final _emailController = TextEditingController(
+    text: widget.user?.email ?? '',
+  );
+
   bool _isSaving = false;
 
   Future<void> _save() async {
     final nome = _nameController.text.trim();
+
     if (nome.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Informe o nome do cliente')));
+        const SnackBar(content: Text('Informe o nome do cliente')),
+      );
       return;
     }
+
     setState(() => _isSaving = true);
+
     try {
       final user = User(
         id: widget.user?.id,
@@ -34,17 +46,18 @@ class _UserFormState extends State<UserForm> {
         email: _emailController.text.trim(),
         ativo: true,
       );
+
       if (widget.user == null) {
         await service.createUser(user);
       } else {
         await service.updateUser(user);
       }
+
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Erro: $e')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro: $e')));
     } finally {
       setState(() => _isSaving = false);
     }
@@ -53,11 +66,11 @@ class _UserFormState extends State<UserForm> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.user != null;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? 'Editar cliente' : 'Novo cliente'),
-      ),
-      body: Padding(
+      appBar: AppBar(title: Text(isEdit ? 'Editar cliente' : 'Novo cliente')),
+      body: SingleChildScrollView(
+        // 🔥 IMPORTANTE
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -66,33 +79,40 @@ class _UserFormState extends State<UserForm> {
               decoration: const InputDecoration(labelText: 'Nome'),
               textCapitalization: TextCapitalization.words,
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: _phoneController,
               decoration: const InputDecoration(labelText: 'Telefone'),
               keyboardType: TextInputType.phone,
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'E-mail'),
               keyboardType: TextInputType.emailAddress,
             ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.client,
-                  foregroundColor: Colors.white,
+            const SizedBox(height: 20),
+
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.client,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : Text(isEdit ? 'Atualizar' : 'Cadastrar'),
               ),
+              onPressed: _isSaving ? null : _save,
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(isEdit ? 'Atualizar' : 'Cadastrar'),
             ),
           ],
         ),
