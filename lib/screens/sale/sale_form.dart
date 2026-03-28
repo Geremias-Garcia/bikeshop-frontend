@@ -77,7 +77,45 @@ class _SaleFormState extends State<SaleForm> {
     quantidadeController.clear();
   }
 
-  Future<void> salvar() async {
+  // 🔥 SELECIONAR FORMA DE PAGAMENTO
+  Future<FormaPagamento?> _selecionarFormaPagamento() {
+    return showDialog<FormaPagamento>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Forma de pagamento'),
+        children: FormaPagamento.values.map((f) {
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, f),
+            child: Text(f.label),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // 🔥 ALERTA OBRIGATÓRIO
+  Future<void> _mostrarAlertas(List<String> alertas) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('⚠️ Atenção'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: alertas.map((a) => Text('• $a')).toList(),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Entendi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔥 SALVAR VENDA
+  void salvar() async {
     if (selectedUser == null) {
       ScaffoldMessenger.of(
         context,
@@ -92,20 +130,8 @@ class _SaleFormState extends State<SaleForm> {
       return;
     }
 
-    final forma = await showDialog<FormaPagamento>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Forma de pagamento'),
-        children: FormaPagamento.values.map((f) {
-          return SimpleDialogOption(
-            onPressed: () => Navigator.pop(ctx, f),
-            child: Text(f.label),
-          );
-        }).toList(),
-      ),
-    );
-
-    if (forma == null) return;
+    final formaPagamento = await _selecionarFormaPagamento();
+    if (formaPagamento == null) return;
 
     setState(() => isSaving = true);
 
@@ -116,7 +142,15 @@ class _SaleFormState extends State<SaleForm> {
     );
 
     try {
-      await orderService.criarVendaDireta(order, forma);
+      final response = await orderService.criarVendaDireta(
+        order,
+        formaPagamento,
+      );
+
+      // 🔥 MOSTRAR ALERTAS
+      if (response.alertas.isNotEmpty) {
+        await _mostrarAlertas(response.alertas);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(

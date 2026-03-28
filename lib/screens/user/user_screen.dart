@@ -1,18 +1,23 @@
-import 'package:bikeshop_front_end/screens/user/user_form.dart';
 import 'package:flutter/material.dart';
 import '../../modules/products/model/user_model.dart';
 import '../../modules/products/service/user_service.dart';
+import '../../shared/app_theme.dart';
+import 'user_form.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
 
   @override
-  _UserScreenState createState() => _UserScreenState();
+  State<UserScreen> createState() => _UserScreenState();
 }
 
 class _UserScreenState extends State<UserScreen> {
   final service = UserService();
-  List<User> users = [];
+  List<User> _all = [];
+  List<User> _filtered = [];
+  bool isLoading = true;
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -20,131 +25,150 @@ class _UserScreenState extends State<UserScreen> {
     loadUsers();
   }
 
-  void loadUsers() async {
-    final data = await service.getUsers();
-    setState(() => users = data);
+  Future<void> loadUsers() async {
+    setState(() => isLoading = true);
+    try {
+      final data = await service.getUsers();
+      setState(() {
+        _all = data;
+        _filtered = data;
+      });
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Erro: $e')));
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
-  Future<void> confirmDelete(User user) async {
-    final confirm = await showDialog(
+  void _onSearchChanged(String query) {
+    final q = query.toLowerCase();
+    setState(() {
+      _filtered = q.isEmpty
+          ? _all
+          : _all.where((u) =>
+              u.name.toLowerCase().contains(q) ||
+              u.email.toLowerCase().contains(q) ||
+              u.phone.contains(q)).toList();
+    });
+  }
+
+  Future<void> _confirmDelete(User user) async {
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Desativar usuário'),
-        content: Text('Deseja realmente desativar este usuário?'),
+        title: const Text('Desativar cliente'),
+        content: Text('Deseja desativar ${user.name}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Confirmar'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Desativar'),
           ),
         ],
       ),
     );
-
-    if (confirm == true) {
+    if (confirm != true) return;
+    try {
       await service.deleteUser(user.id!);
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Usuário desativado')));
-
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Cliente desativado')));
       loadUsers();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Erro: $e')));
     }
+  }
+
+  void _openForm({User? user}) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => UserForm(user: user)),
+    );
+    loadUsers();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) return const AppLoadingScreen();
+
     return Scaffold(
-      appBar: AppBar(title: Text('Usuários')),
-      body: ListView.builder(
-        padding: EdgeInsets.all(12),
-        itemCount: users.length,
-        itemBuilder: (context, index) {
-          final u = users[index];
-
-          return Container(
-            margin: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
+      appBar: AppBar(
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Buscar por nome, e-mail ou telefone...',
+                  border: InputBorder.none,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.person, color: Colors.orange),
-                ),
-
-                SizedBox(width: 12),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        u.name,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text('Telefone: ${u.phone}'),
-                      Text(
-                        'Email: ${u.email}',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-
-                Column(
+                onChanged: _onSearchChanged,
+              )
+            : const Text('Clientes'),
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _filtered = _all;
+                }
+              });
+            },
+          ),
+        ],
+      ),
+      body: _filtered.isEmpty
+          ? AppEmptyState(
+              message: _isSearching
+                  ? 'Nenhum cliente encontrado'
+                  : 'Nenhum cliente cadastrado',
+              icon: Icons.person_outline,
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _filtered.length,
+              itemBuilder: (context, index) {
+                final u = _filtered[index];
+                return AppCard(
+                  accentColor: AppColors.client,
+                  icon: Icons.person,
+                  onTap: () => _openForm(user: u),
                   children: [
+                    Text(u.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Text(u.phone, style: const TextStyle(fontSize: 13)),
+                    Text(u.email,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                  ],
+                  trailing: [
                     IconButton(
-                      icon: Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => UserForm(user: u)),
-                        );
-                        loadUsers();
-                      },
+                      icon: const Icon(Icons.edit,
+                          color: AppColors.client, size: 20),
+                      onPressed: () => _openForm(user: u),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => confirmDelete(u),
+                      icon: const Icon(Icons.delete_outline,
+                          color: Colors.red, size: 20),
+                      onPressed: () => _confirmDelete(u),
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => UserForm()),
-          );
-          loadUsers();
-        },
-        child: Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openForm(),
+        backgroundColor: AppColors.client,
+        icon: const Icon(Icons.add),
+        label: const Text('Novo cliente'),
       ),
     );
   }

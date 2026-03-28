@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bikeshop_front_end/screens/sale/sale_form.dart';
 import 'budget_form.dart';
 import '../../modules/products/model/order_model.dart';
 import '../../modules/products/service/order_service.dart';
@@ -124,7 +123,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.push(
             context,
@@ -132,8 +131,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           );
           loadOrcamentos();
         },
-        icon: const Icon(Icons.add),
-        label: const Text('Novo Orçamento'),
+        child: Icon(Icons.add),
       ),
     );
   }

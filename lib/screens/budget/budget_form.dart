@@ -74,8 +74,14 @@ class _BudgetFormState extends State<BudgetForm> {
     );
 
     try {
-      await orderService.criar(order);
-      Navigator.pop(context);
+      await orderService.criar(order); // ✅ CORRETO AGORA
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Orçamento criado!')));
+        Navigator.pop(context);
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -101,7 +107,10 @@ class _BudgetFormState extends State<BudgetForm> {
             DropdownButtonFormField<Product>(
               hint: const Text('Produto'),
               items: products.map((p) {
-                return DropdownMenuItem(value: p, child: Text(p.nome));
+                return DropdownMenuItem(
+                  value: p,
+                  child: Text('NOME: ${p.nome} - ESTOQUE: ${p.estoque}'),
+                );
               }).toList(),
               onChanged: (v) => setState(() => selectedProduct = v),
             ),
